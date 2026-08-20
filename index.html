@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apartamento Louise & Tito — Reforma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E4A42;         /* verde escuro do logo */
+    --lime:#8DC63F;        /* verde lima do logo */
+    --paper:#F7F8F4;       /* papel esverdeado */
+    --concrete:#E4E9E0;
+    --line:#D3DACF;
+    --mid:#2F7266;         /* verde médio (cartão) */
+    --amber:#D9822B;       /* à vista */
+    --muted:#68756E;
+    --ok:#1A7F37;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Barlow',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.45;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 16px 64px}
+
+  /* ---------- Cabeçalho ---------- */
+  header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:28px 16px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{ /* fita zebrada de obra */
+    content:'';
+    position:absolute;left:0;right:0;bottom:0;height:8px;
+    background:repeating-linear-gradient(-45deg,var(--lime) 0 14px,var(--ink) 14px 28px);
+  }
+  .head-inner{max-width:880px;margin:0 auto}
+  .eyebrow{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    font-size:12px;color:var(--lime);
+  }
+  h1{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;text-transform:uppercase;
+    font-size:clamp(28px,6vw,44px);
+    letter-spacing:.02em;line-height:1.05;margin-top:6px;
+  }
+  .head-sub{margin-top:8px;font-size:13px;color:#BFD0C6}
+
+  /* ---------- Cards resumo ---------- */
+  .cards{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+    margin-top:22px;
+  }
+  @media(max-width:720px){.cards{grid-template-columns:1fr 1fr}.cards .card.total{grid-column:1/-1}}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:14px 14px 12px;
+  }
+  .card.total{background:var(--ink);border-color:var(--ink);color:#fff}
+  .card.total .lbl{color:var(--lime)}
+  .card .sub{font-size:11.5px;color:#BFD0C6;margin-top:3px}
+  .card.previsto{border-style:dashed;border-color:#A8BC8A;background:#FBFCF8}
+  .card.previsto .val{color:#4E7A1D}
+  .card .lbl{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);
+  }
+  .card .val{font-size:clamp(20px,4.5vw,26px);font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+  .card.pago .val{color:var(--ok)}
+  .card.aberto .val{color:var(--mid)}
+
+  /* ---------- Seções ---------- */
+  section{margin-top:34px}
+  .sec-title{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.1em;font-size:18px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sec-title::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  /* ---------- Filtros ---------- */
+  .filters{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .chip{
+    font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:999px;padding:7px 14px;cursor:pointer;transition:all .15s;
+  }
+  .chip:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  /* ---------- Lista de custos ---------- */
+  .cost{
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    margin-top:12px;overflow:hidden;
+  }
+  .cost-head{
+    width:100%;text-align:left;background:none;border:none;cursor:pointer;
+    padding:14px;display:flex;align-items:center;gap:12px;
+    font-family:inherit;color:inherit;
+  }
+  .cost-head:focus-visible{outline:2px solid var(--lime);outline-offset:-2px}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .cost-info{flex:1;min-width:0}
+  .cost-name{font-weight:700;font-size:15px}
+  .cost-meta{font-size:12.5px;color:var(--muted);margin-top:1px}
+  .cost-val{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .caret{flex:none;transition:transform .2s;color:var(--muted)}
+  .cost.open .caret{transform:rotate(180deg)}
+  .cost-body{display:none;border-top:1px dashed var(--line);padding:6px 14px 12px}
+  .cost.open .cost-body{display:block}
+  .cost.prev{border-style:dashed;background:#FBFCF8}
+  .prog{height:6px;background:var(--concrete);border-radius:99px;margin:10px 0 4px;overflow:hidden}
+  .prog>i{display:block;height:100%;background:var(--lime);border-radius:99px}
+  .prog-lbl{font-size:12px;color:var(--muted);margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase;
+    letter-spacing:.1em;font-size:11px;color:var(--muted);text-align:left;
+    padding:6px 4px;border-bottom:1px solid var(--line);
+  }
+  td{padding:6px 4px;border-bottom:1px solid #EDF1E9;font-variant-numeric:tabular-nums}
+  td:last-child,th:last-child{text-align:right}
+  .tag{
+    display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:2px 7px;
+  }
+  .tag.pago{background:#E6F4EA;color:var(--ok)}
+  .tag.aberto{background:#EEF5E2;color:#4E7A1D}
+
+  /* ---------- Fluxo mensal ---------- */
+  .flow{margin-top:14px}
+  .year-head{
+    width:100%;display:flex;align-items:center;gap:10px;
+    background:var(--concrete);border:none;border-radius:8px;
+    padding:10px 12px;margin-top:14px;cursor:pointer;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.1em;font-size:15px;color:var(--ink);
+  }
+  .year-head:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  .year-head .y-count{font-family:'Barlow',sans-serif;font-weight:500;font-size:12px;letter-spacing:0;text-transform:none;color:var(--muted)}
+  .year-head .y-total{margin-left:auto;font-family:'Barlow',sans-serif;font-weight:700;font-size:14px;letter-spacing:0;font-variant-numeric:tabular-nums}
+  .year-head .caret{transition:transform .2s}
+  .year-group.closed .year-head .caret{transform:rotate(-90deg)}
+  .year-group.closed .year-months{display:none}
+  .month{
+    display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;
+    padding:9px 0;border-bottom:1px solid #EDF1E9;
+  }
+  .m-lbl{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;font-size:13px;
+  }
+  .m-lbl small{display:block;font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .bar{height:22px;border-radius:5px;overflow:hidden;display:flex;background:var(--concrete)}
+  .bar>i{display:block;height:100%}
+  .bar .seg-boleto{background:var(--lime)}
+  .bar .seg-cartao{background:var(--mid)}
+  .bar .seg-vista{background:var(--amber)}
+  .m-val{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .month.today{background:#F0F7E6;border-radius:8px;padding-left:6px;padding-right:6px;margin:0 -6px}
+  .month.today .m-lbl{color:#4E7A1D}
+  .month.done{opacity:.55}
+  .month:hover .bar{outline:1.5px solid var(--ink)}
+  .m-detail{
+    grid-column:1/-1;display:none;font-size:12.5px;color:var(--muted);
+    padding:2px 0 4px 74px;
+  }
+  .month.open .m-detail{display:block}
+  @media(max-width:560px){.m-detail{padding-left:0}}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <div class="eyebrow">Diário financeiro da obra</div>
+    <h1>Apartamento Louise &amp; Tito</h1>
+    <div class="head-sub">Av. República do Líbano · São Paulo — atualizado em 20/08/2026</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="cards">
+    <div class="card total"><div class="lbl">Visão total da obra</div><div class="val" id="c-total">—</div><div class="sub" id="c-total-sub"></div></div>
+    <div class="card pago"><div class="lbl">Já pago</div><div class="val" id="c-pago">—</div></div>
+    <div class="card aberto"><div class="lbl">A pagar · contratado</div><div class="val" id="c-aberto">—</div></div>
+    <div class="card previsto"><div class="lbl">Previsto · a fechar</div><div class="val" id="c-previsto">—</div></div>
+  </div>
+
+  <section>
+    <div class="sec-title">Custos da reforma</div>
+    <div class="filters" id="filters" role="group" aria-label="Filtrar por forma de pagamento">
+      <button class="chip on" data-f="todos">Todos</button>
+      <button class="chip" data-f="boleto">Boleto</button>
+      <button class="chip" data-f="cartao">Cartão</button>
+      <button class="chip" data-f="vista">À vista</button>
+    </div>
+    <div id="costs"></div>
+  </section>
+
+  <section id="sec-previstos" style="display:none">
+    <div class="sec-title">Previstos · aguardando fechamento</div>
+    <div id="previstos"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">Fluxo de pagamentos mês a mês</div>
+    <div class="flow" id="flow"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lime)"></i>Boleto</span>
+      <span><i class="sw" style="background:var(--mid)"></i>Cartão de crédito</span>
+      <span><i class="sw" style="background:var(--amber)"></i>À vista</span>
+      <span>· Toque em um mês para ver o detalhe</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* =====================================================
+   DADOS DA OBRA — cada novo custo entra neste array
+   forma: 'boleto' | 'cartao' | 'vista'
+===================================================== */
+const HOJE = new Date('2026-08-20T12:00:00');
+
+const CUSTOS = [
+  {
+    nome: 'Projeto de Arquitetura',
+    detalhe: 'MAB3 Arquitetura · 10× de R$ 6.900,00',
+    forma: 'boleto',
+    total: 69000.00,
+    parcelas: Array.from({length:10}, (_,i) => {
+      const d = new Date(2025, 10, 7); // 07/11/2025
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: 6900.00 };
+    })
+  },
+  {
+    nome: 'Seguro de Obra',
+    detalhe: 'Cartão de crédito em 7× · 1ª parcela em 14/08/2026',
+    forma: 'cartao',
+    total: 3290.11,
+    parcelas: Array.from({length:7}, (_,i) => {
+      const d = new Date(2026, 7, 14); // 1ª parcela em 14/08/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: i < 6 ? 470.02 : 469.99 };
+    })
+  }
+];
+
+/* =====================================================
+   CUSTOS PREVISTOS — valor já definido, mas ainda sem
+   pagamento fechado. Quando fechar, migra para CUSTOS
+   com a forma e as parcelas.
+===================================================== */
+const PREVISTOS = [
+  {
+    nome: 'Empreitada da Obra',
+    detalhe: 'A R de Oliveira Pinturas · negociação em fechamento',
+    total: 365000.00
+  },
+  {
+    nome: 'Ar Condicionado',
+    detalhe: 'Negociação em fechamento',
+    total: 99000.00
+  }
+];
+
+/* ===================================================== */
+const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtD = d => d.toLocaleDateString('pt-BR');
+const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const FORMA = {boleto:'Boleto bancário', cartao:'Cartão de crédito', vista:'À vista'};
+const COR = {boleto:'var(--lime)', cartao:'var(--mid)', vista:'var(--amber)'};
+
+/* ---- cards ---- */
+let total=0, pago=0;
+CUSTOS.forEach(c => c.parcelas.forEach(p => {
+  total += p.valor;
+  if (p.data <= HOJE) pago += p.valor;
+}));
+const previsto = PREVISTOS.reduce((s,c)=>s+c.total,0);
+document.getElementById('c-total').textContent = fmt(total + previsto);
+document.getElementById('c-total-sub').textContent = fmt(total) + ' contratado + ' + fmt(previsto) + ' previsto';
+document.getElementById('c-pago').textContent = fmt(pago);
+document.getElementById('c-aberto').textContent = fmt(total - pago);
+document.getElementById('c-previsto').textContent = fmt(previsto);
+
+/* ---- lista de custos ---- */
+const costsEl = document.getElementById('costs');
+CUSTOS.forEach(c => {
+  const pagoC = c.parcelas.filter(p => p.data <= HOJE);
+  const somaPago = pagoC.reduce((s,p)=>s+p.valor,0);
+  const pct = Math.round(somaPago / c.total * 100);
+
+  const el = document.createElement('div');
+  el.className = 'cost';
+  el.dataset.forma = c.forma;
+  el.innerHTML = `
+    <button class="cost-head" aria-expanded="false">
+      <span class="dot" style="background:${COR[c.forma]}"></span>
+      <span class="cost-info">
+        <span class="cost-name">${c.nome}</span>
+        <span class="cost-meta">${c.detalhe} · ${FORMA[c.forma]}</span>
+      </span>
+      <span class="cost-val">${fmt(c.total)}</span>
+      <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="cost-body">
+      <div class="prog"><i style="width:${pct}%"></i></div>
+      <div class="prog-lbl">${pagoC.length} de ${c.parcelas.length} parcelas pagas · ${fmt(somaPago)} (${pct}%)</div>
+      <table>
+        <thead><tr><th>#</th><th>Vencimento</th><th>Status</th><th>Valor</th></tr></thead>
+        <tbody>
+          ${c.parcelas.map((p,i)=>`
+            <tr>
+              <td>${i+1}/${c.parcelas.length}</td>
+              <td>${fmtD(p.data)}</td>
+              <td><span class="tag ${p.data<=HOJE?'pago':'aberto'}">${p.data<=HOJE?'Pago':'Em aberto'}</span></td>
+              <td>${fmt(p.valor)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  el.querySelector('.cost-head').addEventListener('click', () => {
+    el.classList.toggle('open');
+    el.querySelector('.cost-head').setAttribute('aria-expanded', el.classList.contains('open'));
+  });
+  costsEl.appendChild(el);
+});
+
+/* ---- previstos ---- */
+if (PREVISTOS.length) {
+  document.getElementById('sec-previstos').style.display = '';
+  const prevEl = document.getElementById('previstos');
+  PREVISTOS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cost prev';
+    el.innerHTML = `
+      <div class="cost-head" style="cursor:default">
+        <span class="dot" style="background:#A8BC8A"></span>
+        <span class="cost-info">
+          <span class="cost-name">${c.nome}</span>
+          <span class="cost-meta">${c.detalhe}</span>
+        </span>
+        <span class="cost-val">${fmt(c.total)}</span>
+        <span class="tag aberto" style="flex:none">A fechar</span>
+      </div>`;
+    prevEl.appendChild(el);
+  });
+}
+
+/* ---- filtros ---- */
+document.getElementById('filters').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  const f = b.dataset.f;
+  document.querySelectorAll('.cost').forEach(el => {
+    el.style.display = (f === 'todos' || el.dataset.forma === f) ? '' : 'none';
+  });
+});
+
+/* ---- fluxo mensal ---- */
+const meses = new Map();
+CUSTOS.forEach(c => c.parcelas.forEach((p,i) => {
+  const k = p.data.getFullYear() + '-' + String(p.data.getMonth()+1).padStart(2,'0');
+  if (!meses.has(k)) meses.set(k, {total:0, porForma:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
+  const m = meses.get(k);
+  m.total += p.valor;
+  m.porForma[c.forma] = (m.porForma[c.forma]||0) + p.valor;
+  m.itens.push(`${c.nome} ${i+1}/${c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
+}));
+
+const orden = [...meses.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+const maxMes = Math.max(...orden.map(([,m])=>m.total));
+const flowEl = document.getElementById('flow');
+
+/* agrupar por ano */
+const anos = new Map();
+orden.forEach(([k,m]) => {
+  const y = m.data.getFullYear();
+  if (!anos.has(y)) anos.set(y, []);
+  anos.get(y).push([k,m]);
+});
+
+anos.forEach((mesesAno, ano) => {
+  const totalAno = mesesAno.reduce((s,[,m])=>s+m.total,0);
+  const anoPassado = mesesAno.every(([,m]) => new Date(m.data.getFullYear(), m.data.getMonth()+1, 0) < HOJE);
+
+  const grp = document.createElement('div');
+  grp.className = 'year-group' + (anoPassado ? ' closed' : '');
+  grp.innerHTML = `
+    <button class="year-head" aria-expanded="${!anoPassado}">
+      <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      ${ano}
+      <span class="y-count">${mesesAno.length} ${mesesAno.length===1?'mês':'meses'}${anoPassado?' · concluído':''}</span>
+      <span class="y-total">${fmt(totalAno)}</span>
+    </button>
+    <div class="year-months"></div>`;
+  grp.querySelector('.year-head').addEventListener('click', () => {
+    grp.classList.toggle('closed');
+    grp.querySelector('.year-head').setAttribute('aria-expanded', !grp.classList.contains('closed'));
+  });
+  flowEl.appendChild(grp);
+  const cont = grp.querySelector('.year-months');
+
+  mesesAno.forEach(([k,m]) => {
+  const fim = new Date(m.data.getFullYear(), m.data.getMonth()+1, 0);
+  const isPast = fim < HOJE;
+  const isNow = m.data.getFullYear()===HOJE.getFullYear() && m.data.getMonth()===HOJE.getMonth();
+
+  const row = document.createElement('div');
+  row.className = 'month' + (isNow ? ' today' : isPast ? ' done' : '');
+  row.setAttribute('role','button');
+  row.setAttribute('tabindex','0');
+
+  const segs = Object.entries(m.porForma)
+    .map(([f,v]) => `<i class="seg-${f}" style="width:${(v/m.total*100).toFixed(1)}%"></i>`)
+    .join('');
+
+  row.innerHTML = `
+    <div class="m-lbl">${MES[m.data.getMonth()]}<small>${m.data.getFullYear()}</small></div>
+    <div class="bar" style="width:${Math.max(m.total/maxMes*100,6).toFixed(1)}%">${segs}</div>
+    <div class="m-val">${fmt(m.total)}</div>
+    <div class="m-detail">${m.itens.join('<br>')}</div>`;
+
+    const toggle = () => row.classList.toggle('open');
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggle(); } });
+    cont.appendChild(row);
+  });
+});
+</script>
+</body>
+</html>
