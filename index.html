@@ -68,15 +68,52 @@
   .card.total{background:var(--ink);border-color:var(--ink);color:#fff}
   .card.total .lbl{color:var(--lime)}
   .card .sub{font-size:11.5px;color:#BFD0C6;margin-top:3px}
-  .card.previsto{border-style:dashed;border-color:#A8BC8A;background:#FBFCF8}
+  .card.previsto{border-style:dashed;border-color:#A8BC8A;background:#FBFCF8;cursor:pointer;transition:border-color .15s}
   .card.previsto .val{color:#4E7A1D}
+  .card.previsto:hover{border-color:#4E7A1D}
+  .card.previsto:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  .card.previsto.open .hint{color:#4E7A1D}
+  .pago-detail.previsto-detail{border-style:dashed;border-color:#CBD9B8;border-left:4px solid #4E7A1D;background:#FBFCF8}
+  .pago-detail.previsto-detail .pd-title{color:#4E7A1D}
   .card .lbl{
     font-family:'Barlow Condensed',sans-serif;font-weight:600;
     text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);
   }
   .card .val{font-size:clamp(20px,4.5vw,26px);font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
   .card.pago .val{color:var(--ok)}
+  .card.pago{cursor:pointer;transition:border-color .15s}
+  .card.pago:hover{border-color:var(--ok)}
+  .card.pago:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  .card .hint{font-size:10.5px;color:var(--muted);margin-top:3px}
+  .card.pago.open .hint{color:var(--ok)}
+
+  .pago-detail{
+    display:none;margin-top:10px;background:#fff;
+    border:1px solid #BBDCC4;border-left:4px solid var(--ok);
+    border-radius:10px;padding:12px 14px;
+  }
+  .pago-detail.show{display:block}
+  .pd-title{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--ok);
+    margin-bottom:6px;
+  }
+  .pd-row{
+    display:flex;align-items:center;gap:9px;padding:7px 0;
+    border-bottom:1px solid #EDF1E9;font-size:13.5px;
+  }
+  .pd-row:last-child{border-bottom:none;font-weight:700;padding-top:9px}
+  .pd-row .dot{width:9px;height:9px;border-radius:2px;flex:none}
+  .pd-row .pd-nome{flex:1;min-width:0}
+  .pd-row .pd-meta{font-size:11.5px;color:var(--muted);display:block}
+  .pd-row .pd-val{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
   .card.aberto .val{color:var(--mid)}
+  .card.aberto{cursor:pointer;transition:border-color .15s}
+  .card.aberto:hover{border-color:var(--mid)}
+  .card.aberto:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  .card.aberto.open .hint{color:var(--mid)}
+  .pago-detail.aberto-detail{border-color:#BFD4CE;border-left-color:var(--mid)}
+  .pago-detail.aberto-detail .pd-title{color:var(--mid)}
 
   /* ---------- Seções ---------- */
   section{margin-top:34px}
@@ -86,16 +123,6 @@
     display:flex;align-items:center;gap:10px;
   }
   .sec-title::after{content:'';flex:1;height:1px;background:var(--line)}
-
-  /* ---------- Filtros ---------- */
-  .filters{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-  .chip{
-    font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;
-    border:1.5px solid var(--line);background:#fff;color:var(--ink);
-    border-radius:999px;padding:7px 14px;cursor:pointer;transition:all .15s;
-  }
-  .chip:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
-  .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
 
   /* ---------- Lista de custos ---------- */
   .cost{
@@ -161,9 +188,6 @@
   .m-lbl small{display:block;font-size:11px;color:var(--muted);letter-spacing:.05em}
   .bar{height:22px;border-radius:5px;overflow:hidden;display:flex;background:var(--concrete)}
   .bar>i{display:block;height:100%}
-  .bar .seg-boleto{background:var(--lime)}
-  .bar .seg-cartao{background:var(--mid)}
-  .bar .seg-vista{background:var(--amber)}
   .m-val{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
   .month.today{background:#F0F7E6;border-radius:8px;padding-left:6px;padding-right:6px;margin:0 -6px}
   .month.today .m-lbl{color:#4E7A1D}
@@ -179,6 +203,22 @@
   .legend span{display:flex;align-items:center;gap:6px}
   .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
 
+  /* ---------- Tooltip do fluxo ---------- */
+  #tip{
+    position:fixed;z-index:50;pointer-events:none;
+    background:var(--ink);color:#fff;border-radius:8px;
+    padding:8px 11px;font-size:12.5px;line-height:1.4;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    opacity:0;transition:opacity .12s;max-width:240px;
+  }
+  #tip.show{opacity:1}
+  #tip .t-nome{font-weight:700;display:flex;align-items:center;gap:6px}
+  #tip .t-nome i{width:9px;height:9px;border-radius:2px;flex:none}
+  #tip .t-val{font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+  #tip .t-info{color:#BFD0C6;font-size:11.5px}
+  .bar .seg{cursor:pointer}
+  .bar .seg:hover{filter:brightness(1.15)}
+
   @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -188,27 +228,45 @@
   <div class="head-inner">
     <div class="eyebrow">Diário financeiro da obra</div>
     <h1>Apartamento Louise &amp; Tito</h1>
-    <div class="head-sub">Av. República do Líbano · São Paulo — atualizado em 20/08/2026</div>
+    <div class="head-sub">Av. República do Líbano · São Paulo — atualizado em 26/08/2026</div>
   </div>
 </header>
 
 <div class="wrap">
 
   <div class="cards">
-    <div class="card total"><div class="lbl">Visão total da obra</div><div class="val" id="c-total">—</div><div class="sub" id="c-total-sub"></div></div>
-    <div class="card pago"><div class="lbl">Já pago</div><div class="val" id="c-pago">—</div></div>
-    <div class="card aberto"><div class="lbl">A pagar · contratado</div><div class="val" id="c-aberto">—</div></div>
-    <div class="card previsto"><div class="lbl">Previsto · a fechar</div><div class="val" id="c-previsto">—</div></div>
+    <div class="card total"><div class="lbl">Visão total da obra</div><div class="val" id="c-total">—</div></div>
+    <div class="card pago" id="card-pago" role="button" tabindex="0" aria-expanded="false">
+      <div class="lbl">Já pago</div><div class="val" id="c-pago">—</div>
+      <div class="hint">ver detalhe ▾</div>
+    </div>
+    <div class="card aberto" id="card-aberto" role="button" tabindex="0" aria-expanded="false">
+      <div class="lbl">A pagar · contratado</div><div class="val" id="c-aberto">—</div>
+      <div class="hint">ver detalhe ▾</div>
+    </div>
+    <div class="card previsto" id="card-previsto" role="button" tabindex="0" aria-expanded="false">
+      <div class="lbl">Previsto · a fechar</div><div class="val" id="c-previsto">—</div>
+      <div class="hint">ver detalhe ▾</div>
+    </div>
+  </div>
+
+  <div class="pago-detail" id="pago-detail">
+    <div class="pd-title">O que já foi pago</div>
+    <div id="pd-list"></div>
+  </div>
+
+  <div class="pago-detail aberto-detail" id="aberto-detail">
+    <div class="pd-title">O que falta pagar · contratado</div>
+    <div id="ab-list"></div>
+  </div>
+
+  <div class="pago-detail previsto-detail" id="previsto-detail">
+    <div class="pd-title">Previstos · aguardando fechamento</div>
+    <div id="pv-list"></div>
   </div>
 
   <section>
     <div class="sec-title">Custos da reforma</div>
-    <div class="filters" id="filters" role="group" aria-label="Filtrar por forma de pagamento">
-      <button class="chip on" data-f="todos">Todos</button>
-      <button class="chip" data-f="boleto">Boleto</button>
-      <button class="chip" data-f="cartao">Cartão</button>
-      <button class="chip" data-f="vista">À vista</button>
-    </div>
     <div id="costs"></div>
   </section>
 
@@ -220,11 +278,8 @@
   <section>
     <div class="sec-title">Fluxo de pagamentos mês a mês</div>
     <div class="flow" id="flow"></div>
-    <div class="legend">
-      <span><i class="sw" style="background:var(--lime)"></i>Boleto</span>
-      <span><i class="sw" style="background:var(--mid)"></i>Cartão de crédito</span>
-      <span><i class="sw" style="background:var(--amber)"></i>À vista</span>
-      <span>· Toque em um mês para ver o detalhe</span>
+    <div class="legend" id="legend">
+      <span style="width:100%">· Toque em um mês para ver o detalhe das parcelas</span>
     </div>
   </section>
 
@@ -235,7 +290,7 @@
    DADOS DA OBRA — cada novo custo entra neste array
    forma: 'boleto' | 'cartao' | 'vista'
 ===================================================== */
-const HOJE = new Date('2026-08-20T12:00:00');
+const HOJE = new Date('2026-08-26T12:00:00');
 
 const CUSTOS = [
   {
@@ -259,6 +314,24 @@ const CUSTOS = [
       d.setMonth(d.getMonth() + i);
       return { data: d, valor: i < 6 ? 470.02 : 469.99 };
     })
+  },
+  {
+    nome: 'Ar Condicionado — Equipamentos',
+    detalhe: 'Fechado em 10× sem juros no cartão · datas de pagamento a definir',
+    forma: 'cartao',
+    total: 57000.00,
+    parcelas: [] // cronograma ainda não definido
+  },
+  {
+    nome: 'Ar Condicionado — Instalação',
+    detalhe: 'Cartão de crédito em 6× sem juros · 1ª parcela em 26/08/2026',
+    forma: 'cartao',
+    total: 40000.00,
+    parcelas: Array.from({length:6}, (_,i) => {
+      const d = new Date(2026, 7, 26); // 1ª parcela em 26/08/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: i < 5 ? 6666.67 : 6666.65 };
+    })
   }
 ];
 
@@ -272,11 +345,6 @@ const PREVISTOS = [
     nome: 'Empreitada da Obra',
     detalhe: 'A R de Oliveira Pinturas · negociação em fechamento',
     total: 365000.00
-  },
-  {
-    nome: 'Ar Condicionado',
-    detalhe: 'Negociação em fechamento',
-    total: 99000.00
   }
 ];
 
@@ -285,34 +353,147 @@ const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtD = d => d.toLocaleDateString('pt-BR');
 const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const FORMA = {boleto:'Boleto bancário', cartao:'Cartão de crédito', vista:'À vista'};
-const COR = {boleto:'var(--lime)', cartao:'var(--mid)', vista:'var(--amber)'};
+/* cor própria de cada custo (usada na lista e no fluxo mensal) */
+const PALETA = ['#8DC63F','#2F7266','#D9822B','#5B8DB8','#B0578D','#C9A227','#7A6FBE','#4EA6A0'];
+CUSTOS.forEach((c,i) => c.cor = PALETA[i % PALETA.length]);
 
 /* ---- cards ---- */
 let total=0, pago=0;
-CUSTOS.forEach(c => c.parcelas.forEach(p => {
-  total += p.valor;
-  if (p.data <= HOJE) pago += p.valor;
-}));
+CUSTOS.forEach(c => {
+  if (c.parcelas.length) {
+    c.parcelas.forEach(p => { total += p.valor; if (p.data <= HOJE) pago += p.valor; });
+  } else {
+    total += c.total; // custo fechado, cronograma a definir
+  }
+});
 const previsto = PREVISTOS.reduce((s,c)=>s+c.total,0);
 document.getElementById('c-total').textContent = fmt(total + previsto);
-document.getElementById('c-total-sub').textContent = fmt(total) + ' contratado + ' + fmt(previsto) + ' previsto';
 document.getElementById('c-pago').textContent = fmt(pago);
 document.getElementById('c-aberto').textContent = fmt(total - pago);
 document.getElementById('c-previsto').textContent = fmt(previsto);
 
-/* ---- lista de custos ---- */
-const costsEl = document.getElementById('costs');
+/* ---- detalhe do que já foi pago ---- */
+const pdList = document.getElementById('pd-list');
 CUSTOS.forEach(c => {
+  const pagas = c.parcelas.filter(p => p.data <= HOJE);
+  if (!pagas.length) return;
+  const soma = pagas.reduce((s,p)=>s+p.valor,0);
+  const quitado = pagas.length === c.parcelas.length;
+  const row = document.createElement('div');
+  row.className = 'pd-row';
+  row.innerHTML = `
+    <span class="dot" style="background:${c.cor}"></span>
+    <span class="pd-nome">${c.nome}
+      <span class="pd-meta">${quitado ? 'Quitado ✓ · ' : ''}${pagas.length} de ${c.parcelas.length} parcelas · última em ${fmtD(pagas[pagas.length-1].data)}</span>
+    </span>
+    <span class="pd-val">${fmt(soma)}</span>`;
+  pdList.appendChild(row);
+});
+const totRow = document.createElement('div');
+totRow.className = 'pd-row';
+totRow.innerHTML = `<span class="pd-nome">Total pago até hoje</span><span class="pd-val" style="color:var(--ok)">${fmt(pago)}</span>`;
+pdList.appendChild(totRow);
+
+const cardPago = document.getElementById('card-pago');
+const pagoDetail = document.getElementById('pago-detail');
+const togglePago = () => {
+  pagoDetail.classList.toggle('show');
+  cardPago.classList.toggle('open');
+  cardPago.setAttribute('aria-expanded', pagoDetail.classList.contains('show'));
+  cardPago.querySelector('.hint').textContent = pagoDetail.classList.contains('show') ? 'fechar ▴' : 'ver detalhe ▾';
+  if (pagoDetail.classList.contains('show')) {
+    if (abertoDetail.classList.contains('show')) toggleAberto();
+    if (previstoDetail.classList.contains('show')) togglePrevisto();
+  }
+};
+cardPago.addEventListener('click', togglePago);
+cardPago.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); togglePago(); } });
+
+/* ---- detalhe do que falta pagar ---- */
+const abList = document.getElementById('ab-list');
+CUSTOS.forEach(c => {
+  const abertas = c.parcelas.filter(p => p.data > HOJE);
+  const semCrono = !c.parcelas.length;
+  if (!abertas.length && !semCrono) return;
+  const soma = semCrono ? c.total : abertas.reduce((s,p)=>s+p.valor,0);
+  const row = document.createElement('div');
+  row.className = 'pd-row';
+  row.innerHTML = `
+    <span class="dot" style="background:${c.cor}"></span>
+    <span class="pd-nome">${c.nome}
+      <span class="pd-meta">${semCrono
+        ? 'Cronograma a definir'
+        : `${abertas.length} ${abertas.length===1?'parcela restante':'parcelas restantes'} · próxima em ${fmtD(abertas[0].data)} · última em ${fmtD(abertas[abertas.length-1].data)}`}</span>
+    </span>
+    <span class="pd-val">${fmt(soma)}</span>`;
+  abList.appendChild(row);
+});
+const abTot = document.createElement('div');
+abTot.className = 'pd-row';
+abTot.innerHTML = `<span class="pd-nome">Total a pagar · contratado</span><span class="pd-val" style="color:var(--mid)">${fmt(total - pago)}</span>`;
+abList.appendChild(abTot);
+
+const cardAberto = document.getElementById('card-aberto');
+const abertoDetail = document.getElementById('aberto-detail');
+const toggleAberto = () => {
+  abertoDetail.classList.toggle('show');
+  cardAberto.classList.toggle('open');
+  cardAberto.setAttribute('aria-expanded', abertoDetail.classList.contains('show'));
+  cardAberto.querySelector('.hint').textContent = abertoDetail.classList.contains('show') ? 'fechar ▴' : 'ver detalhe ▾';
+  if (abertoDetail.classList.contains('show')) {
+    if (pagoDetail.classList.contains('show')) togglePago();
+    if (previstoDetail.classList.contains('show')) togglePrevisto();
+  }
+};
+cardAberto.addEventListener('click', toggleAberto);
+cardAberto.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleAberto(); } });
+
+/* ---- detalhe dos previstos ---- */
+const pvList = document.getElementById('pv-list');
+PREVISTOS.forEach(c => {
+  const row = document.createElement('div');
+  row.className = 'pd-row';
+  row.innerHTML = `
+    <span class="dot" style="background:#A8BC8A"></span>
+    <span class="pd-nome">${c.nome}
+      <span class="pd-meta">${c.detalhe}</span>
+    </span>
+    <span class="pd-val">${fmt(c.total)}</span>`;
+  pvList.appendChild(row);
+});
+const pvTot = document.createElement('div');
+pvTot.className = 'pd-row';
+pvTot.innerHTML = `<span class="pd-nome">Total previsto · a fechar</span><span class="pd-val" style="color:#4E7A1D">${fmt(previsto)}</span>`;
+pvList.appendChild(pvTot);
+
+const cardPrevisto = document.getElementById('card-previsto');
+const previstoDetail = document.getElementById('previsto-detail');
+const togglePrevisto = () => {
+  previstoDetail.classList.toggle('show');
+  cardPrevisto.classList.toggle('open');
+  cardPrevisto.setAttribute('aria-expanded', previstoDetail.classList.contains('show'));
+  cardPrevisto.querySelector('.hint').textContent = previstoDetail.classList.contains('show') ? 'fechar ▴' : 'ver detalhe ▾';
+  if (previstoDetail.classList.contains('show')) {
+    if (pagoDetail.classList.contains('show')) togglePago();
+    if (abertoDetail.classList.contains('show')) toggleAberto();
+  }
+};
+cardPrevisto.addEventListener('click', togglePrevisto);
+cardPrevisto.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); togglePrevisto(); } });
+
+/* ---- lista de custos (ordenada do maior para o menor) ---- */
+const costsEl = document.getElementById('costs');
+[...CUSTOS].sort((a,b) => b.total - a.total).forEach(c => {
   const pagoC = c.parcelas.filter(p => p.data <= HOJE);
   const somaPago = pagoC.reduce((s,p)=>s+p.valor,0);
-  const pct = Math.round(somaPago / c.total * 100);
+  const pct = c.parcelas.length ? Math.round(somaPago / c.total * 100) : 0;
 
   const el = document.createElement('div');
   el.className = 'cost';
   el.dataset.forma = c.forma;
   el.innerHTML = `
     <button class="cost-head" aria-expanded="false">
-      <span class="dot" style="background:${COR[c.forma]}"></span>
+      <span class="dot" style="background:${c.cor}"></span>
       <span class="cost-info">
         <span class="cost-name">${c.nome}</span>
         <span class="cost-meta">${c.detalhe} · ${FORMA[c.forma]}</span>
@@ -323,6 +504,7 @@ CUSTOS.forEach(c => {
       </svg>
     </button>
     <div class="cost-body">
+      ${c.parcelas.length ? `
       <div class="prog"><i style="width:${pct}%"></i></div>
       <div class="prog-lbl">${pagoC.length} de ${c.parcelas.length} parcelas pagas · ${fmt(somaPago)} (${pct}%)</div>
       <table>
@@ -336,7 +518,8 @@ CUSTOS.forEach(c => {
               <td>${fmt(p.valor)}</td>
             </tr>`).join('')}
         </tbody>
-      </table>
+      </table>` : `
+      <div class="prog-lbl" style="margin-top:10px">Cronograma de pagamento ainda não definido — assim que as datas fecharem, as parcelas entram aqui e no fluxo mensal.</div>`}
     </div>`;
   el.querySelector('.cost-head').addEventListener('click', () => {
     el.classList.toggle('open');
@@ -366,26 +549,26 @@ if (PREVISTOS.length) {
   });
 }
 
-/* ---- filtros ---- */
-document.getElementById('filters').addEventListener('click', e => {
-  const b = e.target.closest('.chip'); if (!b) return;
-  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
-  b.classList.add('on');
-  const f = b.dataset.f;
-  document.querySelectorAll('.cost').forEach(el => {
-    el.style.display = (f === 'todos' || el.dataset.forma === f) ? '' : 'none';
-  });
+/* ---- legenda dinâmica por custo ---- */
+const legEl = document.getElementById('legend');
+CUSTOS.forEach(c => {
+  if (!c.parcelas.length) return; // sem parcelas, não aparece no fluxo
+  const s = document.createElement('span');
+  s.innerHTML = `<i class="sw" style="background:${c.cor}"></i>${c.nome}`;
+  legEl.insertBefore(s, legEl.lastElementChild);
 });
 
 /* ---- fluxo mensal ---- */
 const meses = new Map();
-CUSTOS.forEach(c => c.parcelas.forEach((p,i) => {
+CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
   const k = p.data.getFullYear() + '-' + String(p.data.getMonth()+1).padStart(2,'0');
-  if (!meses.has(k)) meses.set(k, {total:0, porForma:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
+  if (!meses.has(k)) meses.set(k, {total:0, porCusto:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
   const m = meses.get(k);
   m.total += p.valor;
-  m.porForma[c.forma] = (m.porForma[c.forma]||0) + p.valor;
-  m.itens.push(`${c.nome} ${i+1}/${c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
+  if (!m.porCusto[ci]) m.porCusto[ci] = {valor:0, info:''};
+  m.porCusto[ci].valor += p.valor;
+  m.porCusto[ci].info = `parcela ${i+1}/${c.parcelas.length} · vence ${fmtD(p.data)}`;
+  m.itens.push(`<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome} ${i+1}/${c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
 }));
 
 const orden = [...meses.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
@@ -433,8 +616,8 @@ anos.forEach((mesesAno, ano) => {
   row.setAttribute('role','button');
   row.setAttribute('tabindex','0');
 
-  const segs = Object.entries(m.porForma)
-    .map(([f,v]) => `<i class="seg-${f}" style="width:${(v/m.total*100).toFixed(1)}%"></i>`)
+  const segs = Object.entries(m.porCusto)
+    .map(([ci,d]) => `<i class="seg" style="background:${CUSTOS[ci].cor};width:${(d.valor/m.total*100).toFixed(1)}%" data-nome="${CUSTOS[ci].nome}" data-valor="${fmt(d.valor)}" data-info="${d.info}" data-cor="${CUSTOS[ci].cor}"></i>`)
     .join('');
 
   row.innerHTML = `
@@ -449,6 +632,48 @@ anos.forEach((mesesAno, ano) => {
     cont.appendChild(row);
   });
 });
+/* ---- tooltip ao passar o mouse nos segmentos ---- */
+const tip = document.createElement('div');
+tip.id = 'tip';
+document.body.appendChild(tip);
+
+function moveTip(x, y){
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = x + 14, top = y - h - 12;
+  if (left + w > window.innerWidth - 8) left = x - w - 14;
+  if (top < 8) top = y + 18;
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+}
+
+flowEl.addEventListener('mouseover', e => {
+  const s = e.target.closest('.seg'); if (!s) return;
+  tip.innerHTML = `
+    <div class="t-nome"><i style="background:${s.dataset.cor}"></i>${s.dataset.nome}</div>
+    <div class="t-val">${s.dataset.valor}</div>
+    <div class="t-info">${s.dataset.info}</div>`;
+  tip.classList.add('show');
+});
+flowEl.addEventListener('mousemove', e => {
+  if (tip.classList.contains('show')) moveTip(e.clientX, e.clientY);
+});
+flowEl.addEventListener('mouseout', e => {
+  if (e.target.closest('.seg')) tip.classList.remove('show');
+});
+/* no celular (sem mouse), o toque no segmento mostra o tooltip */
+flowEl.addEventListener('touchstart', e => {
+  const s = e.target.closest('.seg');
+  if (!s) { tip.classList.remove('show'); return; }
+  e.stopPropagation();
+  tip.innerHTML = `
+    <div class="t-nome"><i style="background:${s.dataset.cor}"></i>${s.dataset.nome}</div>
+    <div class="t-val">${s.dataset.valor}</div>
+    <div class="t-info">${s.dataset.info}</div>`;
+  tip.classList.add('show');
+  const r = s.getBoundingClientRect();
+  moveTip(r.left + r.width/2, r.top);
+  setTimeout(() => tip.classList.remove('show'), 2500);
+}, {passive:true});
 </script>
 </body>
 </html>
