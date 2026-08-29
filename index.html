@@ -121,8 +121,13 @@
     font-family:'Barlow Condensed',sans-serif;font-weight:700;
     text-transform:uppercase;letter-spacing:.1em;font-size:18px;
     display:flex;align-items:center;gap:10px;
+    cursor:pointer;user-select:none;
   }
   .sec-title::after{content:'';flex:1;height:1px;background:var(--line)}
+  .sec-title .caret{transition:transform .2s;color:var(--muted);flex:none}
+  section.collapsed .sec-title .caret{transform:rotate(-90deg)}
+  section.collapsed > *:not(.sec-title){display:none}
+  .sec-title:hover .caret{color:var(--ink)}
 
   /* ---------- Lista de custos ---------- */
   .cost{
@@ -228,7 +233,7 @@
   <div class="head-inner">
     <div class="eyebrow">Diário financeiro da obra</div>
     <h1>Apartamento Louise &amp; Tito</h1>
-    <div class="head-sub">Av. República do Líbano · São Paulo — atualizado em 26/08/2026</div>
+    <div class="head-sub">Av. República do Líbano · São Paulo — atualizado em 28/08/2026</div>
   </div>
 </header>
 
@@ -266,17 +271,26 @@
   </div>
 
   <section>
-    <div class="sec-title">Custos da reforma</div>
+    <div class="sec-title" role="button" tabindex="0" aria-expanded="true">
+      <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Custos da reforma
+    </div>
     <div id="costs"></div>
   </section>
 
   <section id="sec-previstos" style="display:none">
-    <div class="sec-title">Previstos · aguardando fechamento</div>
+    <div class="sec-title" role="button" tabindex="0" aria-expanded="true">
+      <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Previstos · aguardando fechamento
+    </div>
     <div id="previstos"></div>
   </section>
 
   <section>
-    <div class="sec-title">Fluxo de pagamentos mês a mês</div>
+    <div class="sec-title" role="button" tabindex="0" aria-expanded="true">
+      <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Fluxo de pagamentos mês a mês
+    </div>
     <div class="flow" id="flow"></div>
     <div class="legend" id="legend">
       <span style="width:100%">· Toque em um mês para ver o detalhe das parcelas</span>
@@ -290,7 +304,7 @@
    DADOS DA OBRA — cada novo custo entra neste array
    forma: 'boleto' | 'cartao' | 'vista'
 ===================================================== */
-const HOJE = new Date('2026-08-26T12:00:00');
+const HOJE = new Date('2026-08-28T12:00:00');
 
 const CUSTOS = [
   {
@@ -314,6 +328,17 @@ const CUSTOS = [
       d.setMonth(d.getMonth() + i);
       return { data: d, valor: i < 6 ? 470.02 : 469.99 };
     })
+  },
+  {
+    nome: 'Empreitada da Obra',
+    detalhe: 'A R de Oliveira Pinturas · 3 parcelas por etapa: 50% início, 30% metade (5 meses), 20% final (10 meses)',
+    forma: 'vista',
+    total: 365000.00,
+    parcelas: [
+      { data: new Date(2026, 7, 31), valor: 182500.00 }, // Início da obra · 50%
+      { data: new Date(2027, 0, 31), valor: 109500.00 }, // Metade da obra · 30%
+      { data: new Date(2027, 5, 30), valor: 73000.00 }   // Final da obra · 20%
+    ]
   },
   {
     nome: 'Ar Condicionado — Equipamentos',
@@ -340,13 +365,7 @@ const CUSTOS = [
    pagamento fechado. Quando fechar, migra para CUSTOS
    com a forma e as parcelas.
 ===================================================== */
-const PREVISTOS = [
-  {
-    nome: 'Empreitada da Obra',
-    detalhe: 'A R de Oliveira Pinturas · negociação em fechamento',
-    total: 365000.00
-  }
-];
+const PREVISTOS = [];
 
 /* ===================================================== */
 const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -480,6 +499,12 @@ const togglePrevisto = () => {
 };
 cardPrevisto.addEventListener('click', togglePrevisto);
 cardPrevisto.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); togglePrevisto(); } });
+if (!PREVISTOS.length) {
+  const empty = document.createElement('div');
+  empty.className = 'pd-row';
+  empty.innerHTML = `<span class="pd-nome" style="color:var(--muted);font-weight:400">Nenhum custo aguardando fechamento no momento 🎉</span>`;
+  pvList.insertBefore(empty, pvList.firstChild);
+}
 
 /* ---- lista de custos (ordenada do maior para o menor) ---- */
 const costsEl = document.getElementById('costs');
@@ -674,6 +699,16 @@ flowEl.addEventListener('touchstart', e => {
   moveTip(r.left + r.width/2, r.top);
   setTimeout(() => tip.classList.remove('show'), 2500);
 }, {passive:true});
+/* ---- seções recolhíveis pelo título ---- */
+document.querySelectorAll('.sec-title').forEach(t => {
+  const toggle = () => {
+    const sec = t.parentElement;
+    sec.classList.toggle('collapsed');
+    t.setAttribute('aria-expanded', !sec.classList.contains('collapsed'));
+  };
+  t.addEventListener('click', toggle);
+  t.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggle(); } });
+});
 </script>
 </body>
 </html>
