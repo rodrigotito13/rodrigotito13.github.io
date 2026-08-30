@@ -168,6 +168,15 @@
   .tag.aberto{background:#EEF5E2;color:#4E7A1D}
 
   /* ---------- Fluxo mensal ---------- */
+  .flow-toggle{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .ft-lbl{font-size:12.5px;color:var(--muted)}
+  .chip{
+    font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:999px;padding:6px 13px;cursor:pointer;transition:all .15s;
+  }
+  .chip:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
   .flow{margin-top:14px}
   .year-head{
     width:100%;display:flex;align-items:center;gap:10px;
@@ -290,9 +299,14 @@
       <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       Fluxo de pagamentos mês a mês
     </div>
+    <div class="flow-toggle">
+      <span class="ft-lbl">Colorir por:</span>
+      <button class="chip on" data-m="custo">Custo</button>
+      <button class="chip" data-m="forma">Forma de pagamento</button>
+    </div>
     <div class="flow" id="flow"></div>
     <div class="legend" id="legend">
-      <span style="width:100%">· Toque em um mês para ver o detalhe das parcelas</span>
+      <span class="leg-hint" style="width:100%">· Toque em um mês para ver o detalhe das parcelas</span>
     </div>
   </section>
 
@@ -370,7 +384,7 @@ const PREVISTOS = [];
 const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtD = d => d.toLocaleDateString('pt-BR');
 const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const FORMA = {boleto:'Boleto bancário', cartao:'Cartão de crédito', vista:'À vista'};
+const FORMA = {boleto:'Boleto bancário', cartao:'Cartão de crédito', vista:'Pix / Transferência'};
 /* cor própria de cada custo (usada na lista e no fluxo mensal) */
 const PALETA = ['#8DC63F','#2F7266','#D9822B','#5B8DB8','#B0578D','#C9A227','#7A6FBE','#4EA6A0'];
 CUSTOS.forEach((c,i) => c.cor = PALETA[i % PALETA.length]);
@@ -573,25 +587,41 @@ if (PREVISTOS.length) {
   });
 }
 
-/* ---- legenda dinâmica por custo ---- */
+/* ---- legenda dinâmica (por custo ou por forma) ---- */
 const legEl = document.getElementById('legend');
-CUSTOS.forEach(c => {
-  if (!c.parcelas.length) return; // sem parcelas, não aparece no fluxo
-  const s = document.createElement('span');
-  s.innerHTML = `<i class="sw" style="background:${c.cor}"></i>${c.nome}`;
-  legEl.insertBefore(s, legEl.lastElementChild);
-});
+function renderLegend() {
+  legEl.querySelectorAll('span:not(.leg-hint)').forEach(s => s.remove());
+  const hint = legEl.querySelector('.leg-hint');
+  if (modoFluxo === 'custo') {
+    CUSTOS.forEach(c => {
+      if (!c.parcelas.length) return;
+      const s = document.createElement('span');
+      s.innerHTML = `<i class="sw" style="background:${c.cor}"></i>${c.nome}`;
+      legEl.insertBefore(s, hint);
+    });
+  } else {
+    const formas = [...new Set(CUSTOS.filter(c => c.parcelas.length).map(c => c.forma))];
+    formas.forEach(f => {
+      const s = document.createElement('span');
+      s.innerHTML = `<i class="sw" style="background:${COR_FORMA[f]}"></i>${FORMA[f]}`;
+      legEl.insertBefore(s, hint);
+    });
+  }
+}
 
 /* ---- fluxo mensal ---- */
 const meses = new Map();
 CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
   const k = p.data.getFullYear() + '-' + String(p.data.getMonth()+1).padStart(2,'0');
-  if (!meses.has(k)) meses.set(k, {total:0, porCusto:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
+  if (!meses.has(k)) meses.set(k, {total:0, porCusto:{}, porForma:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
   const m = meses.get(k);
   m.total += p.valor;
   if (!m.porCusto[ci]) m.porCusto[ci] = {valor:0, info:''};
   m.porCusto[ci].valor += p.valor;
   m.porCusto[ci].info = `parcela ${i+1}/${c.parcelas.length} · vence ${fmtD(p.data)}`;
+  if (!m.porForma[c.forma]) m.porForma[c.forma] = {valor:0, nomes:[]};
+  m.porForma[c.forma].valor += p.valor;
+  m.porForma[c.forma].nomes.push(c.nome.replace('Ar Condicionado — ','Ar · '));
   m.itens.push(`<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome} ${i+1}/${c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
 }));
 
@@ -607,54 +637,81 @@ orden.forEach(([k,m]) => {
   anos.get(y).push([k,m]);
 });
 
-anos.forEach((mesesAno, ano) => {
-  const totalAno = mesesAno.reduce((s,[,m])=>s+m.total,0);
-  const anoPassado = mesesAno.every(([,m]) => new Date(m.data.getFullYear(), m.data.getMonth()+1, 0) < HOJE);
+const COR_FORMA = {cartao:'var(--mid)', boleto:'#8DC63F', vista:'var(--amber)'};
+let modoFluxo = 'custo';
 
-  const grp = document.createElement('div');
-  grp.className = 'year-group' + (anoPassado ? ' closed' : '');
-  grp.innerHTML = `
-    <button class="year-head" aria-expanded="${!anoPassado}">
-      <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      ${ano}
-      <span class="y-count">${mesesAno.length} ${mesesAno.length===1?'mês':'meses'}${anoPassado?' · concluído':''}</span>
-      <span class="y-total">${fmt(totalAno)}</span>
-    </button>
-    <div class="year-months"></div>`;
-  grp.querySelector('.year-head').addEventListener('click', () => {
-    grp.classList.toggle('closed');
-    grp.querySelector('.year-head').setAttribute('aria-expanded', !grp.classList.contains('closed'));
+function renderFlow() {
+  const jaRenderizado = flowEl.children.length > 0;
+  const fechados = new Set([...flowEl.querySelectorAll('.year-group.closed')].map(g => g.dataset.ano));
+  flowEl.innerHTML = '';
+
+  anos.forEach((mesesAno, ano) => {
+    const totalAno = mesesAno.reduce((s,[,m])=>s+m.total,0);
+    const anoPassado = mesesAno.every(([,m]) => new Date(m.data.getFullYear(), m.data.getMonth()+1, 0) < HOJE);
+    const comecaFechado = jaRenderizado ? fechados.has(String(ano)) : anoPassado;
+
+    const grp = document.createElement('div');
+    grp.className = 'year-group' + (comecaFechado ? ' closed' : '');
+    grp.dataset.ano = ano;
+    grp.innerHTML = `
+      <button class="year-head" aria-expanded="${!comecaFechado}">
+        <svg class="caret" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        ${ano}
+        <span class="y-count">${mesesAno.length} ${mesesAno.length===1?'mês':'meses'}${anoPassado?' · concluído':''}</span>
+        <span class="y-total">${fmt(totalAno)}</span>
+      </button>
+      <div class="year-months"></div>`;
+    grp.querySelector('.year-head').addEventListener('click', () => {
+      grp.classList.toggle('closed');
+      grp.querySelector('.year-head').setAttribute('aria-expanded', !grp.classList.contains('closed'));
+    });
+    flowEl.appendChild(grp);
+    const cont = grp.querySelector('.year-months');
+
+    mesesAno.forEach(([k,m]) => {
+      const fim = new Date(m.data.getFullYear(), m.data.getMonth()+1, 0);
+      const isPast = fim < HOJE;
+      const isNow = m.data.getFullYear()===HOJE.getFullYear() && m.data.getMonth()===HOJE.getMonth();
+
+      const row = document.createElement('div');
+      row.className = 'month' + (isNow ? ' today' : isPast ? ' done' : '');
+      row.setAttribute('role','button');
+      row.setAttribute('tabindex','0');
+
+      const segs = modoFluxo === 'custo'
+        ? Object.entries(m.porCusto)
+            .map(([ci,d]) => `<i class="seg" style="background:${CUSTOS[ci].cor};width:${(d.valor/m.total*100).toFixed(1)}%" data-nome="${CUSTOS[ci].nome}" data-valor="${fmt(d.valor)}" data-info="${d.info}" data-cor="${CUSTOS[ci].cor}"></i>`)
+            .join('')
+        : Object.entries(m.porForma)
+            .map(([f,d]) => `<i class="seg" style="background:${COR_FORMA[f]};width:${(d.valor/m.total*100).toFixed(1)}%" data-nome="${FORMA[f]}" data-valor="${fmt(d.valor)}" data-info="${d.nomes.join(' + ')}" data-cor="${COR_FORMA[f]}"></i>`)
+            .join('');
+
+      row.innerHTML = `
+        <div class="m-lbl">${MES[m.data.getMonth()]}<small>${m.data.getFullYear()}</small></div>
+        <div class="bar" style="width:${Math.max(m.total/maxMes*100,6).toFixed(1)}%">${segs}</div>
+        <div class="m-val">${fmt(m.total)}</div>
+        <div class="m-detail">${m.itens.join('<br>')}</div>`;
+
+      const toggle = () => row.classList.toggle('open');
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggle(); } });
+      cont.appendChild(row);
+    });
   });
-  flowEl.appendChild(grp);
-  const cont = grp.querySelector('.year-months');
+}
+renderFlow();
+renderLegend();
 
-  mesesAno.forEach(([k,m]) => {
-  const fim = new Date(m.data.getFullYear(), m.data.getMonth()+1, 0);
-  const isPast = fim < HOJE;
-  const isNow = m.data.getFullYear()===HOJE.getFullYear() && m.data.getMonth()===HOJE.getMonth();
-
-  const row = document.createElement('div');
-  row.className = 'month' + (isNow ? ' today' : isPast ? ' done' : '');
-  row.setAttribute('role','button');
-  row.setAttribute('tabindex','0');
-
-  const segs = Object.entries(m.porCusto)
-    .map(([ci,d]) => `<i class="seg" style="background:${CUSTOS[ci].cor};width:${(d.valor/m.total*100).toFixed(1)}%" data-nome="${CUSTOS[ci].nome}" data-valor="${fmt(d.valor)}" data-info="${d.info}" data-cor="${CUSTOS[ci].cor}"></i>`)
-    .join('');
-
-  row.innerHTML = `
-    <div class="m-lbl">${MES[m.data.getMonth()]}<small>${m.data.getFullYear()}</small></div>
-    <div class="bar" style="width:${Math.max(m.total/maxMes*100,6).toFixed(1)}%">${segs}</div>
-    <div class="m-val">${fmt(m.total)}</div>
-    <div class="m-detail">${m.itens.join('<br>')}</div>`;
-
-    const toggle = () => row.classList.toggle('open');
-    row.addEventListener('click', toggle);
-    row.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggle(); } });
-    cont.appendChild(row);
-  });
+/* ---- seletor colorir por custo/forma ---- */
+document.querySelector('.flow-toggle').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b || b.classList.contains('on')) return;
+  document.querySelectorAll('.flow-toggle .chip').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  modoFluxo = b.dataset.m;
+  renderFlow();
+  renderLegend();
 });
 /* ---- tooltip ao passar o mouse nos segmentos ---- */
 const tip = document.createElement('div');
