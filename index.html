@@ -241,7 +241,7 @@
 <header>
   <div class="head-inner">
     <h1>Projeto Mirage</h1>
-    <div class="head-sub">Atualizado em 28/08/2026</div>
+    <div class="head-sub">Atualizado em 01/09/2026</div>
   </div>
 </header>
 
@@ -317,7 +317,7 @@
    DADOS DA OBRA — cada novo custo entra neste array
    forma: 'boleto' | 'cartao' | 'vista'
 ===================================================== */
-const HOJE = new Date('2026-08-28T12:00:00');
+const HOJE = new Date('2026-09-01T12:00:00');
 
 const CUSTOS = [
   {
@@ -370,6 +370,16 @@ const CUSTOS = [
       d.setMonth(d.getMonth() + i);
       return { data: d, valor: i < 5 ? 6666.67 : 6666.65 };
     })
+  },
+  {
+    nome: 'Itens Diversos',
+    detalhe: 'Compras avulsas para o apartamento',
+    forma: 'cartao',
+    diversos: true, // total e contagem calculados a partir dos itens
+    total: 0,
+    parcelas: [
+      { data: new Date(2026, 8, 1), valor: 476.98, desc: 'Micro-ondas' } // 01/09/2026 · cartão
+    ]
   }
 ];
 
@@ -388,6 +398,11 @@ const FORMA = {boleto:'Boleto bancário', cartao:'Cartão de crédito', vista:'P
 /* cor própria de cada custo (usada na lista e no fluxo mensal) */
 const PALETA = ['#8DC63F','#2F7266','#D9822B','#5B8DB8','#B0578D','#C9A227','#7A6FBE','#4EA6A0'];
 CUSTOS.forEach((c,i) => c.cor = PALETA[i % PALETA.length]);
+/* custos "diversos": total = soma dos itens, descrição com a contagem */
+CUSTOS.filter(c => c.diversos).forEach(c => {
+  c.total = c.parcelas.reduce((s,p)=>s+p.valor,0);
+  c.detalhe = `${c.detalhe} · ${c.parcelas.length} ${c.parcelas.length===1?'item':'itens'}`;
+});
 
 /* ---- cards ---- */
 let total=0, pago=0;
@@ -544,13 +559,13 @@ const costsEl = document.getElementById('costs');
     <div class="cost-body">
       ${c.parcelas.length ? `
       <div class="prog"><i style="width:${pct}%"></i></div>
-      <div class="prog-lbl">${pagoC.length} de ${c.parcelas.length} parcelas pagas · ${fmt(somaPago)} (${pct}%)</div>
+      <div class="prog-lbl">${pagoC.length} de ${c.parcelas.length} ${c.diversos ? 'itens pagos' : 'parcelas pagas'} · ${fmt(somaPago)} (${pct}%)</div>
       <table>
-        <thead><tr><th>#</th><th>Vencimento</th><th>Status</th><th>Valor</th></tr></thead>
+        <thead><tr><th>${c.diversos ? 'Item' : '#'}</th><th>${c.diversos ? 'Compra' : 'Vencimento'}</th><th>Status</th><th>Valor</th></tr></thead>
         <tbody>
           ${c.parcelas.map((p,i)=>`
             <tr>
-              <td>${i+1}/${c.parcelas.length}</td>
+              <td>${p.desc ? p.desc : `${i+1}/${c.parcelas.length}`}</td>
               <td>${fmtD(p.data)}</td>
               <td><span class="tag ${p.data<=HOJE?'pago':'aberto'}">${p.data<=HOJE?'Pago':'Em aberto'}</span></td>
               <td>${fmt(p.valor)}</td>
@@ -618,11 +633,13 @@ CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
   m.total += p.valor;
   if (!m.porCusto[ci]) m.porCusto[ci] = {valor:0, info:''};
   m.porCusto[ci].valor += p.valor;
-  m.porCusto[ci].info = `parcela ${i+1}/${c.parcelas.length} · vence ${fmtD(p.data)}`;
+  m.porCusto[ci].info = p.desc
+    ? (m.porCusto[ci].info ? m.porCusto[ci].info + ' + ' + p.desc : p.desc)
+    : `parcela ${i+1}/${c.parcelas.length} · vence ${fmtD(p.data)}`;
   if (!m.porForma[c.forma]) m.porForma[c.forma] = {valor:0, nomes:[]};
   m.porForma[c.forma].valor += p.valor;
-  m.porForma[c.forma].nomes.push(c.nome.replace('Ar Condicionado — ','Ar · '));
-  m.itens.push(`<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome} ${i+1}/${c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
+  m.porForma[c.forma].nomes.push(p.desc ? p.desc : c.nome.replace('Ar Condicionado — ','Ar · '));
+  m.itens.push(`<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome}${p.desc ? ' · ' + p.desc : ' ' + (i+1) + '/' + c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
 }));
 
 const orden = [...meses.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
