@@ -241,7 +241,7 @@
 <header>
   <div class="head-inner">
     <h1>Projeto Mirage</h1>
-    <div class="head-sub">Atualizado em 01/09/2026</div>
+    <div class="head-sub">Atualizado em 02/09/2026</div>
   </div>
 </header>
 
@@ -317,7 +317,7 @@
    DADOS DA OBRA — cada novo custo entra neste array
    forma: 'boleto' | 'cartao' | 'vista'
 ===================================================== */
-const HOJE = new Date('2026-09-01T12:00:00');
+const HOJE = new Date('2026-09-02T12:00:00');
 
 const CUSTOS = [
   {
@@ -355,10 +355,14 @@ const CUSTOS = [
   },
   {
     nome: 'Ar Condicionado — Equipamentos',
-    detalhe: 'Fechado em 10× sem juros no cartão · datas de pagamento a definir',
+    detalhe: 'Cartão de crédito em 10× sem juros · 1ª parcela em 02/09/2026',
     forma: 'cartao',
     total: 57000.00,
-    parcelas: [] // cronograma ainda não definido
+    parcelas: Array.from({length:10}, (_,i) => {
+      const d = new Date(2026, 8, 2); // 1ª parcela paga em 02/09/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: 5700.00 };
+    })
   },
   {
     nome: 'Ar Condicionado — Instalação',
