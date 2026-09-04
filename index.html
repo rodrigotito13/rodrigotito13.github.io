@@ -392,7 +392,13 @@ const CUSTOS = [
    pagamento fechado. Quando fechar, migra para CUSTOS
    com a forma e as parcelas.
 ===================================================== */
-const PREVISTOS = [];
+const PREVISTOS = [
+  {
+    nome: 'Automação Residencial',
+    detalhe: 'Condições de pagamento a definir',
+    total: 287892.00
+  }
+];
 
 /* ===================================================== */
 const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
