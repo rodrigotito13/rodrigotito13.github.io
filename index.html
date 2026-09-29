@@ -57,10 +57,10 @@
 
   /* ---------- Cards resumo ---------- */
   .cards{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+    display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
     margin-top:22px;
   }
-  @media(max-width:720px){.cards{grid-template-columns:1fr 1fr}.cards .card.total{grid-column:1/-1}}
+  @media(max-width:720px){.cards{grid-template-columns:1fr 1fr}}
   .card{
     background:#fff;border:1px solid var(--line);border-radius:10px;
     padding:14px 14px 12px;
@@ -249,6 +249,7 @@
 
   <div class="cards">
     <div class="card total"><div class="lbl">Visão total da obra</div><div class="val" id="c-total">—</div></div>
+    <div class="card total"><div class="lbl">Valor m²</div><div class="val" id="c-m2">—</div><div class="sub">base: 239 m²</div></div>
     <div class="card pago" id="card-pago" role="button" tabindex="0" aria-expanded="false">
       <div class="lbl">Já pago</div><div class="val" id="c-pago">—</div>
       <div class="hint">ver detalhe ▾</div>
@@ -497,6 +498,7 @@ CUSTOS.forEach(c => {
 });
 const previsto = PREVISTOS.reduce((s,c)=>s+c.total,0);
 document.getElementById('c-total').textContent = fmt(total + previsto);
+document.getElementById('c-m2').textContent = fmt((total + previsto) / 239);
 document.getElementById('c-pago').textContent = fmt(pago);
 document.getElementById('c-aberto').textContent = fmt(total - pago);
 document.getElementById('c-previsto').textContent = fmt(previsto);
