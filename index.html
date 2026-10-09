@@ -55,6 +55,9 @@
   }
   .head-sub{margin-top:8px;font-size:13px;color:#BFD0C6}
 
+  /* ---------- Toggle pagador ---------- */
+  .payer-toggle{display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap}
+
   /* ---------- Cards resumo ---------- */
   .cards{
     display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
@@ -241,11 +244,17 @@
 <header>
   <div class="head-inner">
     <h1>Projeto Mirage</h1>
-    <div class="head-sub">Atualizado em 28/09/2026</div>
+    <div class="head-sub">Atualizado em 08/10/2026</div>
   </div>
 </header>
 
 <div class="wrap">
+
+  <div class="payer-toggle" role="group" aria-label="Filtrar pagamentos por pessoa">
+    <span class="ft-lbl">Pago por:</span>
+    <button class="chip on" data-q="louise">Louise</button>
+    <button class="chip" data-q="tito">Tito</button>
+  </div>
 
   <div class="cards">
     <div class="card total"><div class="lbl">Visão total da obra</div><div class="val" id="c-total">—</div></div>
@@ -318,7 +327,7 @@
    DADOS DA OBRA — cada novo custo entra neste array
    forma: 'boleto' | 'cartao' | 'vista'
 ===================================================== */
-const HOJE = new Date('2026-09-28T12:00:00');
+const HOJE = new Date('2026-10-10T12:00:00');
 
 const CUSTOS = [
   {
@@ -390,11 +399,11 @@ const CUSTOS = [
   },
   {
     nome: 'Concierge MAB3',
-    detalhe: 'Compra em 28/09/2026 · Cartão de crédito em 10× · 1ª parcela na fatura de out/2026',
+    detalhe: 'Cartão de crédito em 10× · 1ª parcela em 29/09/2026, demais a cada 30 dias',
     forma: 'cartao',
     total: 66143.70,
     parcelas: Array.from({length:10}, (_,i) => {
-      const d = new Date(2026, 9, 28); // 1ª parcela em 28/10/2026 (fatura de outubro)
+      const d = new Date(2026, 8, 29); // 1ª parcela em 29/09/2026
       d.setMonth(d.getMonth() + i);
       return { data: d, valor: 6614.37 };
     })
@@ -444,13 +453,66 @@ const CUSTOS = [
     })
   },
   {
+    nome: 'Automação — Troianos',
+    detalhe: 'Cartão de crédito em 7× · entrada de R$ 40 mil em 02/10 + 6× de R$ 25 mil a cada 30 dias',
+    forma: 'cartao',
+    total: 190000.00,
+    parcelas: Array.from({length:7}, (_,i) => {
+      const d = new Date(2026, 9, 2); // 1ª parcela (R$ 40 mil) paga em 02/10/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: i === 0 ? 40000.00 : 25000.00 };
+    })
+  },
+  {
+    nome: 'Giro Metal',
+    detalhe: 'Batentes da porta e tomadas no chão do living · 20% em 15/10 + 30% em 30/10 + 50% na entrega',
+    forma: 'vista',
+    total: 10280.00,
+    parcelas: [
+      { data: new Date(2026, 9, 15), valor: 2056.00, desc: '20% · sinal' },
+      { data: new Date(2026, 9, 30), valor: 3084.00, desc: '30%' },
+      { data: null, valor: 5140.00, desc: '50% · na entrega', quando: 'Na entrega' }
+    ]
+  },
+  {
+    nome: 'Planejados Florense',
+    detalhe: 'Cartão de crédito em 6× · 1ª parcela em 07/10/2026, demais a cada 30 dias',
+    forma: 'cartao',
+    total: 380000.00,
+    parcelas: Array.from({length:6}, (_,i) => {
+      const d = new Date(2026, 9, 7); // 1ª parcela paga em 07/10/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: i < 5 ? 63333.33 : 63333.35 };
+    })
+  },
+  {
+    nome: 'Automação — Produtos em dólar',
+    detalhe: 'Pago à vista no cartão em out/2026',
+    forma: 'cartao',
+    total: 44394.84,
+    parcelas: [
+      { data: new Date(2026, 9, 8), valor: 44394.84, desc: 'À vista no cartão · out/2026', quem: 'tito' }
+    ]
+  },
+  {
+    nome: 'Casa Mansur — Envidraçamento da Varanda',
+    detalhe: 'Cartão de crédito em 5× · 1ª parcela em 10/10/2026',
+    forma: 'cartao',
+    total: 78000.00,
+    parcelas: Array.from({length:5}, (_,i) => {
+      const d = new Date(2026, 9, 10); // 1ª parcela paga em 10/10/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: 15600.00 };
+    })
+  },
+  {
     nome: 'Itens Diversos',
     detalhe: 'Compras avulsas para o apartamento',
     forma: 'cartao',
     diversos: true, // total e contagem calculados a partir dos itens
     total: 0,
     parcelas: [
-      { data: new Date(2026, 8, 1), valor: 476.98, desc: 'Micro-ondas' } // 01/09/2026 · cartão
+      { data: new Date(2026, 8, 1), valor: 476.98, desc: 'Micro-ondas', quem: 'tito' } // 01/09/2026 · cartão
     ]
   }
 ];
@@ -462,14 +524,14 @@ const CUSTOS = [
 ===================================================== */
 const PREVISTOS = [
   {
-    nome: 'Planejados Florense',
-    detalhe: 'Cartão de crédito em 6× · datas a definir',
-    total: 387000.00
+    nome: 'Automação — Receiver',
+    detalhe: 'Condições de pagamento a definir',
+    total: 16805.16
   },
   {
-    nome: 'Automação Residencial',
-    detalhe: 'Condições de pagamento a definir',
-    total: 287892.00
+    nome: 'Automação — Ubiquiti',
+    detalhe: 'A comprar · sem data definida',
+    total: 30737.00
   }
 ];
 
@@ -491,7 +553,7 @@ CUSTOS.filter(c => c.diversos).forEach(c => {
 let total=0, pago=0;
 CUSTOS.forEach(c => {
   if (c.parcelas.length) {
-    c.parcelas.forEach(p => { total += p.valor; if (p.data <= HOJE) pago += p.valor; });
+    c.parcelas.forEach(p => { total += p.valor; if (p.data && p.data <= HOJE) pago += p.valor; });
   } else {
     total += c.total; // custo fechado, cronograma a definir
   }
@@ -503,27 +565,52 @@ document.getElementById('c-pago').textContent = fmt(pago);
 document.getElementById('c-aberto').textContent = fmt(total - pago);
 document.getElementById('c-previsto').textContent = fmt(previsto);
 
-/* ---- detalhe do que já foi pago ---- */
+/* ---- detalhe do que já foi pago (ordenado do maior para o menor) ----
+   quem pagou: Louise é o padrão; parcelas do Tito levam quem:'tito' */
+const QUEM = {todos:'Casal', louise:'Louise', tito:'Tito'};
 const pdList = document.getElementById('pd-list');
-CUSTOS.forEach(c => {
-  const pagas = c.parcelas.filter(p => p.data <= HOJE);
-  if (!pagas.length) return;
-  const soma = pagas.reduce((s,p)=>s+p.valor,0);
-  const quitado = pagas.length === c.parcelas.length;
-  const row = document.createElement('div');
-  row.className = 'pd-row';
-  row.innerHTML = `
-    <span class="dot" style="background:${c.cor}"></span>
-    <span class="pd-nome">${c.nome}
-      <span class="pd-meta">${quitado ? 'Quitado ✓ · ' : ''}${pagas.length} de ${c.parcelas.length} parcelas · última em ${fmtD(pagas[pagas.length-1].data)}</span>
-    </span>
-    <span class="pd-val">${fmt(soma)}</span>`;
-  pdList.appendChild(row);
+function renderPagoDetail(filtro) {
+  pdList.innerHTML = '';
+  let somaFiltro = 0;
+  CUSTOS
+    .map(c => ({ c, pagas: c.parcelas.filter(p => p.data && p.data <= HOJE && (filtro==='todos' || (p.quem||'louise')===filtro)) }))
+    .filter(x => x.pagas.length)
+    .map(x => ({ ...x, soma: x.pagas.reduce((s,p)=>s+p.valor,0) }))
+    .sort((a,b) => b.soma - a.soma)
+    .forEach(({c, pagas, soma}) => {
+    somaFiltro += soma;
+    const quitado = c.parcelas.filter(p => p.data && p.data <= HOJE).length === c.parcelas.length;
+    const row = document.createElement('div');
+    row.className = 'pd-row';
+    row.innerHTML = `
+      <span class="dot" style="background:${c.cor}"></span>
+      <span class="pd-nome">${c.nome}
+        <span class="pd-meta">${quitado && filtro==='todos' ? 'Quitado ✓ · ' : ''}${pagas.length} de ${c.parcelas.length} parcelas · última em ${fmtD(pagas[pagas.length-1].data)}</span>
+      </span>
+      <span class="pd-val">${fmt(soma)}</span>`;
+    pdList.appendChild(row);
+  });
+  if (!pdList.children.length) {
+    const vazio = document.createElement('div');
+    vazio.className = 'pd-row';
+    vazio.innerHTML = `<span class="pd-nome" style="color:var(--muted);font-weight:400">Nenhum pagamento de ${QUEM[filtro]} até hoje</span>`;
+    pdList.appendChild(vazio);
+  }
+  const totRow = document.createElement('div');
+  totRow.className = 'pd-row';
+  totRow.innerHTML = `<span class="pd-nome">Total pago até hoje${filtro==='todos' ? '' : ' · ' + QUEM[filtro]}</span><span class="pd-val" style="color:var(--ok)">${fmt(somaFiltro)}</span>`;
+  pdList.appendChild(totRow);
+  document.getElementById('c-pago').textContent = fmt(somaFiltro);
+}
+renderPagoDetail('louise');
+
+/* ---- toggle pago por ---- */
+document.querySelector('.payer-toggle').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b || b.classList.contains('on')) return;
+  document.querySelectorAll('.payer-toggle .chip').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  renderPagoDetail(b.dataset.q);
 });
-const totRow = document.createElement('div');
-totRow.className = 'pd-row';
-totRow.innerHTML = `<span class="pd-nome">Total pago até hoje</span><span class="pd-val" style="color:var(--ok)">${fmt(pago)}</span>`;
-pdList.appendChild(totRow);
 
 const cardPago = document.getElementById('card-pago');
 const pagoDetail = document.getElementById('pago-detail');
@@ -540,21 +627,28 @@ const togglePago = () => {
 cardPago.addEventListener('click', togglePago);
 cardPago.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); togglePago(); } });
 
-/* ---- detalhe do que falta pagar ---- */
+/* ---- detalhe do que falta pagar (ordenado do maior para o menor) ---- */
 const abList = document.getElementById('ab-list');
-CUSTOS.forEach(c => {
-  const abertas = c.parcelas.filter(p => p.data > HOJE);
-  const semCrono = !c.parcelas.length;
-  if (!abertas.length && !semCrono) return;
-  const soma = semCrono ? c.total : abertas.reduce((s,p)=>s+p.valor,0);
+CUSTOS
+  .map(c => ({ c, abertas: c.parcelas.filter(p => !p.data || p.data > HOJE), semCrono: !c.parcelas.length }))
+  .filter(x => x.abertas.length || x.semCrono)
+  .map(x => ({ ...x, soma: x.semCrono ? x.c.total : x.abertas.reduce((s,p)=>s+p.valor,0) }))
+  .sort((a,b) => b.soma - a.soma)
+  .forEach(({c, abertas, semCrono, soma}) => {
   const row = document.createElement('div');
   row.className = 'pd-row';
   row.innerHTML = `
     <span class="dot" style="background:${c.cor}"></span>
     <span class="pd-nome">${c.nome}
-      <span class="pd-meta">${semCrono
-        ? 'Cronograma a definir'
-        : `${abertas.length} ${abertas.length===1?'parcela restante':'parcelas restantes'} · próxima em ${fmtD(abertas[0].data)} · última em ${fmtD(abertas[abertas.length-1].data)}`}</span>
+      <span class="pd-meta">${(() => {
+        if (semCrono) return 'Cronograma a definir';
+        const datadas = abertas.filter(p => p.data);
+        const semData = abertas.length - datadas.length;
+        let txt = `${abertas.length} ${abertas.length===1?'parcela restante':'parcelas restantes'}`;
+        if (datadas.length) txt += ` · próxima em ${fmtD(datadas[0].data)} · última em ${fmtD(datadas[datadas.length-1].data)}`;
+        if (semData) txt += ` · ${semData} sem data definida`;
+        return txt;
+      })()}</span>
     </span>
     <span class="pd-val">${fmt(soma)}</span>`;
   abList.appendChild(row);
@@ -621,7 +715,7 @@ if (!PREVISTOS.length) {
 /* ---- lista de custos (ordenada do maior para o menor) ---- */
 const costsEl = document.getElementById('costs');
 [...CUSTOS].sort((a,b) => b.total - a.total).forEach(c => {
-  const pagoC = c.parcelas.filter(p => p.data <= HOJE);
+  const pagoC = c.parcelas.filter(p => p.data && p.data <= HOJE);
   const somaPago = pagoC.reduce((s,p)=>s+p.valor,0);
   const pct = c.parcelas.length ? Math.round(somaPago / c.total * 100) : 0;
 
@@ -650,8 +744,8 @@ const costsEl = document.getElementById('costs');
           ${c.parcelas.map((p,i)=>`
             <tr>
               <td>${p.desc ? p.desc : `${i+1}/${c.parcelas.length}`}</td>
-              <td>${fmtD(p.data)}</td>
-              <td><span class="tag ${p.data<=HOJE?'pago':'aberto'}">${p.data<=HOJE?'Pago':'Em aberto'}</span></td>
+              <td>${p.data ? fmtD(p.data) : (p.quando || 'A definir')}</td>
+              <td><span class="tag ${p.data&&p.data<=HOJE?'pago':'aberto'}">${p.data&&p.data<=HOJE?'Pago':'Em aberto'}</span></td>
               <td>${fmt(p.valor)}</td>
             </tr>`).join('')}
         </tbody>
@@ -711,6 +805,7 @@ function renderLegend() {
 /* ---- fluxo mensal ---- */
 const meses = new Map();
 CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
+  if (!p.data) return; // parcela sem data (ex.: "na entrega") fica fora do fluxo até ter data
   const k = p.data.getFullYear() + '-' + String(p.data.getMonth()+1).padStart(2,'0');
   if (!meses.has(k)) meses.set(k, {total:0, porCusto:{}, porForma:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
   const m = meses.get(k);
@@ -724,7 +819,7 @@ CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
   if (!m.porForma[fp]) m.porForma[fp] = {valor:0, nomes:[]};
   m.porForma[fp].valor += p.valor;
   m.porForma[fp].nomes.push(p.desc ? p.desc : c.nome.replace('Ar Condicionado — ','Ar · '));
-  m.itens.push(`<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome}${p.desc ? ' · ' + p.desc : ' ' + (i+1) + '/' + c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})`);
+  m.itens.push({ valor: p.valor, html: `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome}${p.desc ? ' · ' + p.desc : ' ' + (i+1) + '/' + c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})` });
 }));
 
 const orden = [...meses.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
@@ -794,7 +889,7 @@ function renderFlow() {
         <div class="m-lbl">${MES[m.data.getMonth()]}<small>${m.data.getFullYear()}</small></div>
         <div class="bar" style="width:${Math.max(m.total/maxMes*100,6).toFixed(1)}%">${segs}</div>
         <div class="m-val">${fmt(m.total)}</div>
-        <div class="m-detail">${m.itens.join('<br>')}</div>`;
+        <div class="m-detail">${[...m.itens].sort((a,b)=>b.valor-a.valor).map(x=>x.html).join('<br>')}</div>`;
 
       const toggle = () => row.classList.toggle('open');
       row.addEventListener('click', toggle);
