@@ -314,6 +314,11 @@
       <button class="chip on" data-m="custo">Custo</button>
       <button class="chip" data-m="forma">Forma de pagamento</button>
     </div>
+    <div class="flow-toggle" id="fluxo-quem" role="group" aria-label="Filtrar fluxo por pessoa">
+      <span class="ft-lbl">Pago por:</span>
+      <button class="chip on" data-q="louise">Louise</button>
+      <button class="chip" data-q="tito">Tito</button>
+    </div>
     <div class="flow" id="flow"></div>
     <div class="legend" id="legend">
       <span class="leg-hint" style="width:100%">· Toque em um mês para ver o detalhe das parcelas</span>
@@ -807,40 +812,44 @@ function renderLegend() {
   }
 }
 
-/* ---- fluxo mensal ---- */
-const meses = new Map();
-CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
-  if (!p.data) return; // parcela sem data (ex.: "na entrega") fica fora do fluxo até ter data
-  const k = p.data.getFullYear() + '-' + String(p.data.getMonth()+1).padStart(2,'0');
-  if (!meses.has(k)) meses.set(k, {total:0, porCusto:{}, porForma:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
-  const m = meses.get(k);
-  m.total += p.valor;
-  if (!m.porCusto[ci]) m.porCusto[ci] = {valor:0, info:''};
-  m.porCusto[ci].valor += p.valor;
-  m.porCusto[ci].info = p.desc
-    ? (m.porCusto[ci].info ? m.porCusto[ci].info + ' + ' + p.desc : p.desc)
-    : `parcela ${i+1}/${c.parcelas.length} · vence ${fmtD(p.data)}`;
-  const fp = p.forma || c.forma; // parcela pode ter forma própria (ex.: entrada em Pix)
-  if (!m.porForma[fp]) m.porForma[fp] = {valor:0, nomes:[]};
-  m.porForma[fp].valor += p.valor;
-  m.porForma[fp].nomes.push(p.desc ? p.desc : c.nome.replace('Ar Condicionado — ','Ar · '));
-  m.itens.push({ valor: p.valor, html: `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome}${p.desc ? ' · ' + p.desc : ' ' + (i+1) + '/' + c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})` });
-}));
-
-const orden = [...meses.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
-const maxMes = Math.max(...orden.map(([,m])=>m.total));
+/* ---- fluxo mensal (filtrado por quem paga; Louise é o padrão das parcelas) ---- */
 const flowEl = document.getElementById('flow');
-
-/* agrupar por ano */
-const anos = new Map();
-orden.forEach(([k,m]) => {
-  const y = m.data.getFullYear();
-  if (!anos.has(y)) anos.set(y, []);
-  anos.get(y).push([k,m]);
-});
-
 const COR_FORMA = {cartao:'var(--mid)', boleto:'#8DC63F', vista:'var(--amber)'};
 let modoFluxo = 'custo';
+let quemFluxo = 'louise';
+let anos = new Map(), maxMes = 1;
+
+function buildMeses() {
+  const meses = new Map();
+  CUSTOS.forEach((c,ci) => c.parcelas.forEach((p,i) => {
+    if (!p.data) return; // parcela sem data (ex.: "na entrega") fica fora do fluxo até ter data
+    if ((p.quem || 'louise') !== quemFluxo) return;
+    const k = p.data.getFullYear() + '-' + String(p.data.getMonth()+1).padStart(2,'0');
+    if (!meses.has(k)) meses.set(k, {total:0, porCusto:{}, porForma:{}, itens:[], data:new Date(p.data.getFullYear(), p.data.getMonth(), 1)});
+    const m = meses.get(k);
+    m.total += p.valor;
+    if (!m.porCusto[ci]) m.porCusto[ci] = {valor:0, info:''};
+    m.porCusto[ci].valor += p.valor;
+    m.porCusto[ci].info = p.desc
+      ? (m.porCusto[ci].info ? m.porCusto[ci].info + ' + ' + p.desc : p.desc)
+      : `parcela ${i+1}/${c.parcelas.length} · vence ${fmtD(p.data)}`;
+    const fp = p.forma || c.forma; // parcela pode ter forma própria (ex.: entrada em Pix)
+    if (!m.porForma[fp]) m.porForma[fp] = {valor:0, nomes:[]};
+    m.porForma[fp].valor += p.valor;
+    m.porForma[fp].nomes.push(p.desc ? p.desc : c.nome.replace('Ar Condicionado — ','Ar · '));
+    m.itens.push({ valor: p.valor, html: `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c.cor};margin-right:5px"></i>${c.nome}${p.desc ? ' · ' + p.desc : ' ' + (i+1) + '/' + c.parcelas.length} — ${fmt(p.valor)} (${fmtD(p.data)})` });
+  }));
+
+  const orden = [...meses.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  maxMes = Math.max(1, ...orden.map(([,m])=>m.total));
+  anos = new Map();
+  orden.forEach(([k,m]) => {
+    const y = m.data.getFullYear();
+    if (!anos.has(y)) anos.set(y, []);
+    anos.get(y).push([k,m]);
+  });
+}
+buildMeses();
 
 function renderFlow() {
   const jaRenderizado = flowEl.children.length > 0;
@@ -914,6 +923,16 @@ document.querySelector('.flow-toggle').addEventListener('click', e => {
   modoFluxo = b.dataset.m;
   renderFlow();
   renderLegend();
+});
+
+/* ---- seletor do fluxo: pago por Louise/Tito ---- */
+document.getElementById('fluxo-quem').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b || b.classList.contains('on')) return;
+  document.querySelectorAll('#fluxo-quem .chip').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  quemFluxo = b.dataset.q;
+  buildMeses();
+  renderFlow();
 });
 /* ---- tooltip ao passar o mouse nos segmentos ---- */
 const tip = document.createElement('div');
