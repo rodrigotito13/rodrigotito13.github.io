@@ -405,13 +405,13 @@ const CUSTOS = [
   },
   {
     nome: 'Concierge MAB3',
-    detalhe: 'Cartão de crédito em 10× · 1ª parcela em 29/09/2026, demais a cada 30 dias',
+    detalhe: 'Cartão de crédito em 10× · 1ª de R$ 6.614,37 em 29/09/2026 + 9× de R$ 6.556,68 (desconto negociado)',
     forma: 'cartao',
-    total: 66143.70,
+    total: 65624.49,
     parcelas: Array.from({length:10}, (_,i) => {
       const d = new Date(2026, 8, 29); // 1ª parcela em 29/09/2026
       d.setMonth(d.getMonth() + i);
-      return { data: d, valor: 6614.37 };
+      return { data: d, valor: i === 0 ? 6614.37 : 6556.68 };
     })
   },
   {
