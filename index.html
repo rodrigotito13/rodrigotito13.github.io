@@ -244,7 +244,7 @@
 <header>
   <div class="head-inner">
     <h1>Projeto Mirage</h1>
-    <div class="head-sub">Atualizado em 05/11/2026</div>
+    <div class="head-sub">Atualizado em 25/11/2026</div>
   </div>
 </header>
 
@@ -252,7 +252,8 @@
 
   <div class="payer-toggle" role="group" aria-label="Filtrar pagamentos por pessoa">
     <span class="ft-lbl">Pago por:</span>
-    <button class="chip on" data-q="louise">Louise</button>
+    <button class="chip on" data-q="todos">Total</button>
+    <button class="chip" data-q="louise">Louise</button>
     <button class="chip" data-q="tito">Tito</button>
   </div>
 
@@ -332,7 +333,7 @@
    DADOS DA OBRA — cada novo custo entra neste array
    forma: 'boleto' | 'cartao' | 'vista'
 ===================================================== */
-const HOJE = new Date('2026-11-05T12:00:00');
+const HOJE = new Date('2026-11-25T12:00:00');
 
 const CUSTOS = [
   {
@@ -511,6 +512,17 @@ const CUSTOS = [
     })
   },
   {
+    nome: 'Churrasqueira e Coifa Lar Grill',
+    detalhe: 'Cartão de crédito em 10× · 1ª parcela em 10/11/2026 · pago pelo Tito',
+    forma: 'cartao',
+    total: 52220.63,
+    parcelas: Array.from({length:10}, (_,i) => {
+      const d = new Date(2026, 10, 10); // 1ª parcela paga em 10/11/2026
+      d.setMonth(d.getMonth() + i);
+      return { data: d, valor: i < 9 ? 5222.06 : 5222.09, quem: 'tito' };
+    })
+  },
+  {
     nome: 'Itens Diversos',
     detalhe: 'Compras avulsas para o apartamento',
     forma: 'cartao',
@@ -531,22 +543,45 @@ const PREVISTOS = [
   {
     nome: 'Eletrodomésticos',
     detalhe: 'Condições de pagamento a definir',
-    total: 143990.00
-  },
-  {
-    nome: 'Churrasqueira e Coifa Lar Grill',
-    detalhe: 'Condições de pagamento a definir',
-    total: 61000.00
+    total: 143990.00,
+    quem: 'tito'
   },
   {
     nome: 'Automação — Receiver',
     detalhe: 'Condições de pagamento a definir',
-    total: 16805.16
+    total: 16805.16,
+    quem: 'tito'
   },
   {
     nome: 'Automação — Ubiquiti',
     detalhe: 'A comprar · sem data definida',
-    total: 30737.00
+    total: 30737.00,
+    quem: 'tito'
+  },
+  {
+    nome: 'Primo Vidros — Boxes e Espelhos',
+    detalhe: 'Valor negociado · condição de pagamento a definir',
+    total: 79400.00
+  },
+  {
+    nome: 'Slide Portas — Portas Prontas',
+    detalhe: 'Valor negociado · cartão em 12× sem juros · cronograma a definir',
+    total: 59890.00
+  },
+  {
+    nome: 'Omnia Inox — Ralos',
+    detalhe: 'Proposta: 1× a combinar (inclui frete)',
+    total: 7826.48
+  },
+  {
+    nome: 'NS Piscinas — Sauna a Vapor',
+    detalhe: 'Proposta: à vista',
+    total: 5275.00
+  },
+  {
+    nome: 'Portobello — Revestimento Banho de Serviço',
+    detalhe: 'Proposta: 4× de R$ 746,10 no cartão (inclui frete)',
+    total: 2984.41
   }
 ];
 
@@ -582,7 +617,7 @@ document.getElementById('c-previsto').textContent = fmt(previsto);
 
 /* ---- detalhe do que já foi pago (ordenado do maior para o menor) ----
    quem pagou: Louise é o padrão; parcelas do Tito levam quem:'tito' */
-const QUEM = {todos:'Casal', louise:'Louise', tito:'Tito'};
+const QUEM = {todos:'Total', louise:'Louise', tito:'Tito'};
 const pdList = document.getElementById('pd-list');
 function renderPagoDetail(filtro) {
   pdList.innerHTML = '';
@@ -617,14 +652,16 @@ function renderPagoDetail(filtro) {
   pdList.appendChild(totRow);
   document.getElementById('c-pago').textContent = fmt(somaFiltro);
 }
-renderPagoDetail('louise');
+renderPagoDetail('todos');
 
-/* ---- toggle pago por ---- */
+/* ---- toggle pago por (afeta Já pago e A pagar) ---- */
 document.querySelector('.payer-toggle').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if (!b || b.classList.contains('on')) return;
   document.querySelectorAll('.payer-toggle .chip').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
   renderPagoDetail(b.dataset.q);
+  renderAbertoDetail(b.dataset.q);
+  renderPrevistoDetail(b.dataset.q);
 });
 
 const cardPago = document.getElementById('card-pago');
@@ -642,36 +679,50 @@ const togglePago = () => {
 cardPago.addEventListener('click', togglePago);
 cardPago.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); togglePago(); } });
 
-/* ---- detalhe do que falta pagar (ordenado do maior para o menor) ---- */
+/* ---- detalhe do que falta pagar (ordenado do maior para o menor) ----
+   filtrado pelo mesmo toggle Pago por; parcelas sem quem contam como da Louise */
 const abList = document.getElementById('ab-list');
-CUSTOS
-  .map(c => ({ c, abertas: c.parcelas.filter(p => !p.data || p.data > HOJE), semCrono: !c.parcelas.length }))
-  .filter(x => x.abertas.length || x.semCrono)
-  .map(x => ({ ...x, soma: x.semCrono ? x.c.total : x.abertas.reduce((s,p)=>s+p.valor,0) }))
-  .sort((a,b) => b.soma - a.soma)
-  .forEach(({c, abertas, semCrono, soma}) => {
-  const row = document.createElement('div');
-  row.className = 'pd-row';
-  row.innerHTML = `
-    <span class="dot" style="background:${c.cor}"></span>
-    <span class="pd-nome">${c.nome}
-      <span class="pd-meta">${(() => {
-        if (semCrono) return 'Cronograma a definir';
-        const datadas = abertas.filter(p => p.data);
-        const semData = abertas.length - datadas.length;
-        let txt = `${abertas.length} ${abertas.length===1?'parcela restante':'parcelas restantes'}`;
-        if (datadas.length) txt += ` · próxima em ${fmtD(datadas[0].data)} · última em ${fmtD(datadas[datadas.length-1].data)}`;
-        if (semData) txt += ` · ${semData} sem data definida`;
-        return txt;
-      })()}</span>
-    </span>
-    <span class="pd-val">${fmt(soma)}</span>`;
-  abList.appendChild(row);
-});
-const abTot = document.createElement('div');
-abTot.className = 'pd-row';
-abTot.innerHTML = `<span class="pd-nome">Total a pagar · contratado</span><span class="pd-val" style="color:var(--mid)">${fmt(total - pago)}</span>`;
-abList.appendChild(abTot);
+function renderAbertoDetail(filtro) {
+  abList.innerHTML = '';
+  let somaFiltro = 0;
+  CUSTOS
+    .map(c => ({ c, abertas: c.parcelas.filter(p => (!p.data || p.data > HOJE) && (filtro==='todos' || (p.quem||'louise')===filtro)), semCrono: !c.parcelas.length && (filtro==='todos' || (c.quem||'louise')===filtro) }))
+    .filter(x => x.abertas.length || x.semCrono)
+    .map(x => ({ ...x, soma: x.semCrono ? x.c.total : x.abertas.reduce((s,p)=>s+p.valor,0) }))
+    .sort((a,b) => b.soma - a.soma)
+    .forEach(({c, abertas, semCrono, soma}) => {
+    somaFiltro += soma;
+    const row = document.createElement('div');
+    row.className = 'pd-row';
+    row.innerHTML = `
+      <span class="dot" style="background:${c.cor}"></span>
+      <span class="pd-nome">${c.nome}
+        <span class="pd-meta">${(() => {
+          if (semCrono) return 'Cronograma a definir';
+          const datadas = abertas.filter(p => p.data);
+          const semData = abertas.length - datadas.length;
+          let txt = `${abertas.length} ${abertas.length===1?'parcela restante':'parcelas restantes'}`;
+          if (datadas.length) txt += ` · próxima em ${fmtD(datadas[0].data)} · última em ${fmtD(datadas[datadas.length-1].data)}`;
+          if (semData) txt += ` · ${semData} sem data definida`;
+          return txt;
+        })()}</span>
+      </span>
+      <span class="pd-val">${fmt(soma)}</span>`;
+    abList.appendChild(row);
+  });
+  if (!abList.children.length) {
+    const vazio = document.createElement('div');
+    vazio.className = 'pd-row';
+    vazio.innerHTML = `<span class="pd-nome" style="color:var(--muted);font-weight:400">Nada a pagar de ${QUEM[filtro]}</span>`;
+    abList.appendChild(vazio);
+  }
+  const abTot = document.createElement('div');
+  abTot.className = 'pd-row';
+  abTot.innerHTML = `<span class="pd-nome">Total a pagar · contratado${filtro==='todos' ? '' : ' · ' + QUEM[filtro]}</span><span class="pd-val" style="color:var(--mid)">${fmt(somaFiltro)}</span>`;
+  abList.appendChild(abTot);
+  document.getElementById('c-aberto').textContent = fmt(somaFiltro);
+}
+renderAbertoDetail('todos');
 
 const cardAberto = document.getElementById('card-aberto');
 const abertoDetail = document.getElementById('aberto-detail');
@@ -688,23 +739,38 @@ const toggleAberto = () => {
 cardAberto.addEventListener('click', toggleAberto);
 cardAberto.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleAberto(); } });
 
-/* ---- detalhe dos previstos ---- */
+/* ---- detalhe dos previstos (filtrado pelo toggle Pago por; sem quem = Louise) ---- */
 const pvList = document.getElementById('pv-list');
-PREVISTOS.forEach(c => {
-  const row = document.createElement('div');
-  row.className = 'pd-row';
-  row.innerHTML = `
-    <span class="dot" style="background:#A8BC8A"></span>
-    <span class="pd-nome">${c.nome}
-      <span class="pd-meta">${c.detalhe}</span>
-    </span>
-    <span class="pd-val">${fmt(c.total)}</span>`;
-  pvList.appendChild(row);
-});
-const pvTot = document.createElement('div');
-pvTot.className = 'pd-row';
-pvTot.innerHTML = `<span class="pd-nome">Total previsto · a fechar</span><span class="pd-val" style="color:#4E7A1D">${fmt(previsto)}</span>`;
-pvList.appendChild(pvTot);
+function renderPrevistoDetail(filtro) {
+  pvList.innerHTML = '';
+  let somaFiltro = 0;
+  PREVISTOS
+    .filter(c => filtro==='todos' || (c.quem||'louise')===filtro)
+    .forEach(c => {
+    somaFiltro += c.total;
+    const row = document.createElement('div');
+    row.className = 'pd-row';
+    row.innerHTML = `
+      <span class="dot" style="background:#A8BC8A"></span>
+      <span class="pd-nome">${c.nome}
+        <span class="pd-meta">${c.detalhe}</span>
+      </span>
+      <span class="pd-val">${fmt(c.total)}</span>`;
+    pvList.appendChild(row);
+  });
+  if (!pvList.children.length) {
+    const vazio = document.createElement('div');
+    vazio.className = 'pd-row';
+    vazio.innerHTML = `<span class="pd-nome" style="color:var(--muted);font-weight:400">${PREVISTOS.length ? 'Nenhum previsto de ' + QUEM[filtro] : 'Nenhum custo aguardando fechamento no momento 🎉'}</span>`;
+    pvList.appendChild(vazio);
+  }
+  const pvTot = document.createElement('div');
+  pvTot.className = 'pd-row';
+  pvTot.innerHTML = `<span class="pd-nome">Total previsto · a fechar${filtro==='todos' ? '' : ' · ' + QUEM[filtro]}</span><span class="pd-val" style="color:#4E7A1D">${fmt(somaFiltro)}</span>`;
+  pvList.appendChild(pvTot);
+  document.getElementById('c-previsto').textContent = fmt(somaFiltro);
+}
+renderPrevistoDetail('todos');
 
 const cardPrevisto = document.getElementById('card-previsto');
 const previstoDetail = document.getElementById('previsto-detail');
@@ -720,12 +786,6 @@ const togglePrevisto = () => {
 };
 cardPrevisto.addEventListener('click', togglePrevisto);
 cardPrevisto.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); togglePrevisto(); } });
-if (!PREVISTOS.length) {
-  const empty = document.createElement('div');
-  empty.className = 'pd-row';
-  empty.innerHTML = `<span class="pd-nome" style="color:var(--muted);font-weight:400">Nenhum custo aguardando fechamento no momento 🎉</span>`;
-  pvList.insertBefore(empty, pvList.firstChild);
-}
 
 /* ---- lista de custos (ordenada do maior para o menor) ---- */
 const costsEl = document.getElementById('costs');
